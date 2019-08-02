@@ -116,7 +116,7 @@ func (d *deployer4go) replaceGoMod() {
 	}
 
 	gc.Doing("deployer4go.replaceGoMod: Replacing go.mod")
-	err = ioutil.WriteFile(goModPath, []byte(goModPathContent), 0755)
+	err = ioutil.WriteFile(goModPath, []byte(goModPathContent), 0644)
 	gc.PanicIfError(err)
 
 }
