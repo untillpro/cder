@@ -5,7 +5,7 @@ Main idea is to update container instances directly from git repos
 # Seeding Single Repo
 
 ```sh
-./directcd cd --repo https://github.com/untillpro/directcd-test \
+./cder cd --repo https://github.com/untillpro/directcd-test \
   -o directcd-test.exe \
   -t 10 \
   -w .tmp
@@ -21,7 +21,7 @@ Main idea is to update container instances directly from git repos
 # Seeding Few Repos
 
 ```sh
-./directcd cd \
+./cder cd \
   --repo https://github.com/untillpro/directcd-test \
   --replace https://github.com/untillpro/directcd-test-print=https://github.com/maxim-ge/directcd-test-print \
   -v \
