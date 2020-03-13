@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,6 +24,7 @@ var timeoutSec int32
 var mainRepo string
 var argReplaced []string
 var deployerEnv []string
+var preps []string
 
 type cdman struct {
 	ctx              context.Context
@@ -62,6 +64,23 @@ func (p *cdman) cycle(wg *sync.WaitGroup, d IDeployer) {
 	gc.Info("timeout", p.timeout)
 
 	// *************************************************
+	if dir, err := filepath.Abs(filepath.Dir(os.Args[0])); err == nil {
+		if _, err := os.Stat(path.Join(dir, "prep.sh")); err == nil {
+			gc.Info("executing prep.sh")
+			gc.ExitIfError(new(gc.PipedExec).
+				Command("prep.sh").
+				WorkingDir(dir).
+				Run(os.Stdout, os.Stderr))
+		}
+	}
+
+	for _, prep := range preps {
+		gc.Info("executing prep command:", prep)
+		prepArgs := strings.Split(prep, " ")
+		gc.ExitIfError(new(gc.PipedExec).
+			Command(prepArgs[0], prepArgs[1:]...).
+			Run(os.Stdout, os.Stderr))
+	}
 
 F:
 	for {
