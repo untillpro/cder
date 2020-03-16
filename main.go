@@ -22,7 +22,7 @@ func main() {
 		cmdCD.PersistentFlags().StringVarP(&workingDir, "working-dir", "w", ".", "Working directory")
 		cmdCD.PersistentFlags().Int32VarP(&timeoutSec, "timeout", "t", 10, "Timeout")
 		cmdCD.PersistentFlags().StringVarP(&mainRepo, "repo", "r", "", "Main repository")
-		cmdCD.PersistentFlags().StringSliceVar(&preps, "prep", []string{}, "Any commands to be executed before start")
+		cmdCD.PersistentFlags().StringSliceVar(&initCmds, "init", []string{}, "Any commands to be executed before start")
 		cmdCD.PersistentFlags().StringSliceVar(&argReplaced, "replace", []string{}, "Repositories to be replaced")
 		cmdCD.PersistentFlags().StringSliceVar(&deployerEnv, "deployer-env", []string{}, "Deployer environment variable")
 		cmdCD.MarkPersistentFlagRequired("repo")

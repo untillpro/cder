@@ -24,7 +24,7 @@ var timeoutSec int32
 var mainRepo string
 var argReplaced []string
 var deployerEnv []string
-var preps []string
+var initCmds []string
 
 type cdman struct {
 	ctx              context.Context
@@ -65,18 +65,18 @@ func (p *cdman) cycle(wg *sync.WaitGroup, d IDeployer) {
 
 	// *************************************************
 	if dir, err := filepath.Abs(filepath.Dir(os.Args[0])); err == nil {
-		if _, err := os.Stat(path.Join(dir, "prep.sh")); err == nil {
-			gc.Info("executing prep.sh")
+		if _, err := os.Stat(path.Join(dir, "init.sh")); err == nil {
+			gc.Info("executing init.sh")
 			gc.ExitIfError(new(gc.PipedExec).
-				Command("prep.sh").
+				Command("init.sh").
 				WorkingDir(dir).
 				Run(os.Stdout, os.Stderr))
 		}
 	}
 
-	for _, prep := range preps {
-		gc.Info("executing prep command:", prep)
-		prepArgs := strings.Split(prep, " ")
+	for _, initCmd := range initCmds {
+		gc.Info("executing init command:", initCmd)
+		prepArgs := strings.Split(initCmd, " ")
 		gc.ExitIfError(new(gc.PipedExec).
 			Command(prepArgs[0], prepArgs[1:]...).
 			Run(os.Stdout, os.Stderr))
