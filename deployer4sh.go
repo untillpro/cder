@@ -1,44 +1,43 @@
+/*
+ * Copyright (c) 2020-present unTill Pro, Ltd. and Contributors
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package main
 
 import (
 	"os"
+	"path"
 
 	gc "github.com/untillpro/gochips"
 )
 
 type deployer4sh struct {
-	// Params
-	deployerPath string
-	repos        []string
-	args         []string
-	forks        map[string]string
+	wd string
 }
 
-func (d *deployer4sh) Start() (err error) {
-	return d.execCommand("start", nil, false)
+func (d *deployer4sh) Deploy(repo string) {
+	d.execCommand("deploy", nil, true)
+}
+
+func (d *deployer4sh) DeployAll(repos []string) {
+	d.execCommand("deploy-all", nil, true)
 }
 
 func (d *deployer4sh) Stop() {
 	d.execCommand("stop", nil, false)
 }
 
-func (d *deployer4sh) DeployAll(repoPaths []string) {
-	d.execCommand("deploy-all", repoPaths, true)
-}
-
-func (d *deployer4sh) Deploy(repoPath string) {
-	d.execCommand("deploy", []string{repoPath}, true)
-
-}
-
 func (d *deployer4sh) execCommand(command string, commandArgs []string, panicOnError bool) (err error) {
 	var args []string
 	args = append(args, deployerEnv...)
-	args = append(args, "./deployer.sh", command)
+	args = append(args, path.Join(d.wd, "deploy.sh"), command)
 	args = append(args, commandArgs...)
 	err = new(gc.PipedExec).
 		Command("env", args...).
-		WorkingDir(workingDir).
+		WorkingDir(d.wd).
 		Run(os.Stdout, os.Stderr)
 	if panicOnError {
 		gc.PanicIfError(err)

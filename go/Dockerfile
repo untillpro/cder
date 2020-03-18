@@ -1,4 +1,4 @@
-FROM golang:1.11.9
+FROM golang:1.14.0
 
 RUN mkdir /cder
 COPY cder /cder/cder

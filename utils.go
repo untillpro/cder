@@ -29,6 +29,21 @@ func getAbsRepoFolders(repoURL string) (repoPath string, repoFolder string) {
 	return
 }
 
+func parseArtifactURL(repoURL string) (aPath, aFN string) {
+	u, err := url.Parse(repoURL)
+	gc.PanicIfError(err)
+	urlParts := strings.Split(u.Path, "/")
+	aFN = urlParts[len(urlParts)-1]
+	lastDotPos := strings.LastIndex(aFN, ".")
+	artifactName := aFN[:lastDotPos]
+	artifactPath, _ := filepath.Abs(path.Join(getArtifactsFolder(), artifactName))
+	return artifactPath, aFN
+}
+
 func getReposFolder() string {
 	return path.Join(workingDir, "repos")
+}
+
+func getArtifactsFolder() string {
+	return path.Join(workingDir, "artifacts")
 }

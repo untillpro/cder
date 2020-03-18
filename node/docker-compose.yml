@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+  shell:
+    image: ${DOCKER_LOGIN}/cdernode:v0.17.0
+    networks:
+      - webgateway
+    command:
+      - cd
+      - --repo=https://github.com/untillpro/untill-air-shell
+      - -w=/cder
+      - -t=10
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.frontend.rule=Host:air.untill.ru
+        - traefik.port=81
+        - traefik.docker.network=webgateway
+
+networks:
+  webgateway:
+    external: true

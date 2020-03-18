@@ -1,6 +1,16 @@
 # cder
 
-Main idea is to update container instances directly from git repos
+Main idea is to update container instances directly from git repos or artifacts
+
+# Containers versions used
+- golang:1.14.0
+- node:10.16.1
+
+# Build
+
+## Create Docker Containers
+
+`untillpro/cder:v{ver}` and `untillpro/cdernode:v{ver}` docker containers will be created and pushed to Dockerhub on pushing tag to github (`build.sh` will be executed by github action)
 
 # Seeding Single Repo
 
@@ -23,7 +33,7 @@ Main idea is to update container instances directly from git repos
 ```sh
 ./cder cd \
   --repo https://github.com/untillpro/directcd-test \
-  --replace https://github.com/untillpro/directcd-test-print=https://github.com/maxim-ge/directcd-test-print \
+  --extraRepo https://github.com/untillpro/directcd-test-print=https://github.com/maxim-ge/directcd-test-print \
   -v \
   -o out.exe \
   -t 10 \
@@ -31,7 +41,7 @@ Main idea is to update container instances directly from git repos
   -- --option1 arg1 arg2
 ```
 
-- Repos specified by `--repo` (main repo) and `--replace` flags are pulled every 10 seconds
+- Repos specified by `--repo` (main repo) and `--extraRepo` flags are pulled every 10 seconds
 - If changes occur 
   - Prevous instance (if any) of `out.exe` is terminated
   - `replace` directive is added to main repo `go.mod`
@@ -43,11 +53,10 @@ Main idea is to update container instances directly from git repos
 
 # Custom Deployer
 
-- If working directory contains `deployer.sh` it will be used to deploy
+- If working directory contains `deploy.sh` it will be used to deploy
 - deployer is executed using `env` command
 - Working directory is one specified by `-w` flag
 - First argument is one of the following:
-  - `start`
   - `stop`
   - `deploy`
     - Executed for any changed repo
@@ -58,6 +67,24 @@ Main idea is to update container instances directly from git repos
 - Environment variables for deployer can be supplied with `--deployer-env <name>=<value>` argument
 - After deploy all repos (even those which wasn't changed) are reseted using `git reset --hard`
 
+# Seeding URL
+```sh
+./cder cdurl \
+  --url https://github.com/untillpro/url 
+  -v \
+  -t 10 \
+  -w .tmp \
+```
+- content of specified url will be fetched each 10 seconds. It should consist of 2 lines separated by `\n`
+  - 1st line - url to an artifact zip
+  - 2nd line - url to a deployer shell script
+- artifacti's URL changed (i.e. new version is released)
+  - `<workingDir>/artifacts/<artifact-name>` folder is recreated
+  - artifact zip is downloaded, saved to `<workingDir>/artifacts/<artifact-name>/<artifact-name>.zip` and unzipped to `<workingDir>/artifacts/<artifact-name>/work-dir` folder
+- deployer URL is changed
+  - deployer is downloaded, saved as `<workingDir>/artifacts/<artifact-name>/depoy.sh` and copied to `<workingDir>/artifacts/<artifact-name>/work-dir` folder
+    - if 1st URL is not changed so far then existing zip is unzipped to `<workingDir>/artifacts/<artifact-name>/work-dir` folder (folder is recreated)
+  - `deploy.sh` will be executed in `<workingDir>/artifacts/<artifact-name>/work-dir` folder
 # Links
 
 Hooks

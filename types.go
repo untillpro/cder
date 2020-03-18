@@ -9,11 +9,12 @@ package main
 
 // IDeployer s.e.
 type IDeployer interface {
-	// Start and Stio must NOT panic
-	Start() (err error)
+	Deploy(repo string)
+	DeployAll(repos []string)
 	Stop()
+}
 
-	// Deploy functions must panic if something goes wrong
-	Deploy(changedRepo string)
-	DeployAll(repoPaths []string)
+// IWatcher s.e.
+type IWatcher interface {
+	Watch(repos []string) (changedRepoPaths []string) // [0] must be main
 }

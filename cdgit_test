@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2020-present unTill Pro, Ltd.
+ */
+
+package main
+
+import (
+	"context"
+	"io/ioutil"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestCderGitBasic(t *testing.T) {
+	setUp()
+	defer tearDown()
+
+	tempDir, err := ioutil.TempDir(os.TempDir(), "cder_test")
+	require.Nil(t, err)
+	cmdRoot.SetArgs([]string{"cd", 
+		"--repo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-bp", 
+		"--extraRepo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-icore",
+		"--extraRepo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-icoreimpl=https://github.com/host6/airs-icoreimpl",
+		"--verbose", "--working-dir", tempDir, "--output", "airs-bp.exe"})
+	ctx, cancel = context.WithCancel(context.Background())
+	cancel()
+	require.Nil(t, execute())
+}
