@@ -1,4 +1,4 @@
-![build.sh](https://github.com/untillpro/cder/workflows/Test%20build.sh/badge.svg)
+![publish to dockerhub](https://github.com/untillpro/cder/workflows/Test%20build.sh/badge.svg)
 # cder
 
 Main idea is to update container instances directly from git repos or artifacts
