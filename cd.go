@@ -75,6 +75,11 @@ func seed(ctx context.Context, wg *sync.WaitGroup) {
 	gc.Info("replacements", replacements)
 	gc.Info("repos", repos)
 
+	if len(workingDir) > 0 {
+		gc.Info("Creating working dir...")
+		gc.PanicIfError(os.MkdirAll(workingDir, 0755))
+	}
+
 	// *************************************************
 	for _, initCmd := range initCmds {
 		gc.Info("Executing init command:", initCmd)

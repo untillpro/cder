@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/untillpro/gochips"
+	gc "github.com/untillpro/gochips"
 )
 
 var (
@@ -44,6 +44,8 @@ esac
 func TestCderURLBasic(t *testing.T) {
 	setUp()
 	defer tearDown()
+
+	testWD := path.Join(tempDir, "workingDir")
 
 	artifactoryDir := path.Join(tempDir, "artifactory")
 	require.Nil(t, os.MkdirAll(artifactoryDir, 0755))
@@ -118,7 +120,7 @@ func TestCderURLBasic(t *testing.T) {
 	}))
 	defer tsMain.Close()
 
-	cmdRoot.SetArgs([]string{"cdurl", "--url", tsMain.URL, "--verbose", "--working-dir", tempDir, "--init", "bash -c 'mkdir init'", "--timeout", "0"})
+	cmdRoot.SetArgs([]string{"cdurl", "--url", tsMain.URL, "--verbose", "--working-dir", testWD, "--init", "bash -c 'mkdir init'", "--timeout", "0"})
 	ctx, cancel = context.WithCancel(context.Background())
 	afterIteration = func() {
 		fmt.Printf("******************* iter %d finished\n", counter)
@@ -145,7 +147,7 @@ func TestCderURLBasic(t *testing.T) {
 			require.Nil(t, err)
 		}
 		require.Equal(t, expectedBytes, actualBytes)
-		require.DirExists(t, path.Join(tempDir, "init"))
+		require.DirExists(t, path.Join(testWD, "init"))
 		if counter > 3 {
 			cancel()
 		}
@@ -156,7 +158,7 @@ func TestCderURLBasic(t *testing.T) {
 }
 
 func TestBuildScript(t *testing.T) {
-	require.NotNil(t, new(gochips.PipedExec).
+	require.NotNil(t, new(gc.PipedExec).
 		Command("env", "VER=5-SNAPSHOT", "./build.sh").
 		Run(os.Stdout, os.Stderr))
 }
@@ -169,9 +171,7 @@ func setUp() {
 	}
 	var err error
 	tempDir, err = ioutil.TempDir(os.TempDir(), "cder_test")
-	if err != nil {
-		panic(err)
-	}
+	gc.PanicIfError(err)
 }
 
 func tearDown() {
