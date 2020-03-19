@@ -44,7 +44,6 @@ func (w *watcherURL) Watch(repos []string) (changedRepos []string) {
 	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")                                            // assuming errors are impossible at runtime
 	_, artifactFileName := parseArtifactURL(artifactURLNew)                              // artifact1
 	artifactHomePath := path.Join(getArtifactsFolder(), reg.ReplaceAllString(repo, "_")) // artifacts/<url>
-	artifactDeployerFile := path.Join(artifactHomePath, "deploy.sh")                     // artifacts/<url>/deploy.sh
 	artifactZipFile := path.Join(artifactHomePath, artifactFileName)                     // artifacts/<url>/artifact1.zip
 	artifactWD := path.Join(artifactHomePath, "work-dir")                                // artifacts/<url>/work-dir/
 
@@ -88,7 +87,6 @@ func (w *watcherURL) Watch(repos []string) (changedRepos []string) {
 		if !isChanged {
 			unzipAll(artifactZipFile, artifactWD) // will clean work-dir
 		}
-		gc.PanicIfError(ioutil.WriteFile(artifactDeployerFile, artifactDeployerBytes, 0755))
 		gc.PanicIfError(ioutil.WriteFile(path.Join(artifactWD, "deploy.sh"), artifactDeployerBytes, 0755))
 		isChanged = true
 		w.deployerURLStored = deployerURLNew
