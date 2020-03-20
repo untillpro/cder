@@ -41,11 +41,10 @@ func (w *watcherURL) Watch(repos []string) (changedRepos []string) {
 	content := strings.Split(contentStr, "\n")
 	artifactURLNew := content[0]
 	deployerURLNew := content[1]
-	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")                                            // assuming errors are impossible at runtime
-	_, artifactFileName := parseArtifactURL(artifactURLNew)                              // artifact1
-	artifactHomePath := path.Join(getArtifactsFolder(), reg.ReplaceAllString(repo, "_")) // artifacts/<url>
-	artifactZipFile := path.Join(artifactHomePath, artifactFileName)                     // artifacts/<url>/artifact1.zip
-	artifactWD := path.Join(artifactHomePath, "work-dir")                                // artifacts/<url>/work-dir/
+	_, artifactFileName := parseArtifactURL(artifactURLNew)          // artifact1
+	artifactHomePath := getArtifactHomePath(repo)                    // artifacts/<url>
+	artifactZipFile := path.Join(artifactHomePath, artifactFileName) // artifacts/<url>/artifact1.zip
+	artifactWD := path.Join(artifactHomePath, "work-dir")            // artifacts/<url>/work-dir/
 
 	isChanged := false
 	deployer = &deployer4sh{
@@ -144,4 +143,9 @@ func unzipAll(zipFile string, dir string) {
 	for _, f := range r.File {
 		extractAndWriteFile(f)
 	}
+}
+
+func getArtifactHomePath(repo string) string {
+	reg, _ := regexp.Compile("[^a-zA-Z0-9]+") // assuming errors are impossible at runtime
+	return path.Join(getArtifactsFolder(), reg.ReplaceAllString(repo, "_"))
 }

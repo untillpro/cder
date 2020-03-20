@@ -19,11 +19,11 @@ type deployer4sh struct {
 }
 
 func (d *deployer4sh) Deploy(repo string) {
-	d.execCommand("deploy", nil, true)
+	d.execCommand("deploy", []string{repo}, true)
 }
 
 func (d *deployer4sh) DeployAll(repos []string) {
-	d.execCommand("deploy-all", nil, true)
+	d.execCommand("deploy-all", repos, true)
 }
 
 func (d *deployer4sh) Stop() {

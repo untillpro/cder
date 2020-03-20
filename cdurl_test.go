@@ -33,6 +33,7 @@ case $1 in
 		rm -r ../../../deploy     
 		mkdir ../../../deploy
 		cp test%d.txt ../../../deploy/testDeployed%d.txt
+		echo $2 >> ../../../deploy/add.txt
 		;;
 	"stop")
 		echo "deployer.stop"
@@ -146,6 +147,10 @@ func TestCderURLBasic(t *testing.T) {
 			expectedBytes, err = ioutil.ReadFile(path.Join(artifactoryDir, "test2.txt"))
 			require.Nil(t, err)
 		}
+		getArtifactsFolder()
+		addFileBytes, err := ioutil.ReadFile(path.Join(workingDir, "deploy/add.txt"))
+		require.Nil(t, err)
+		require.Equal(t, path.Join(getArtifactHomePath(tsMain.URL), "work-dir")+"\n", string(addFileBytes))
 		require.Equal(t, expectedBytes, actualBytes)
 		require.DirExists(t, path.Join(testWD, "init"))
 		if counter > 3 {
