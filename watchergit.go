@@ -72,7 +72,7 @@ func (w *watcherGit) Watch(repos []string) (changedRepos []string) {
 			continue
 		}
 		w.reposMustBeCleaned = true
-		gc.Info("watcherGit", "Commit hash changed", oldHash, newHash)
+		gc.Info("watcherGit", "Commit hash changed", repo, oldHash, newHash)
 		if len(oldHash) > 0 {
 			gitModulesPath := path.Join(repoPath, ".gitmodules")
 			if _, err := os.Stat(gitModulesPath); err == nil {
