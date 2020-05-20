@@ -18,3 +18,11 @@ type IDeployer interface {
 type IWatcher interface {
 	Watch(repos []string) (changedRepoPaths []string) // [0] must be main
 }
+
+// IGitTracker s.e.
+type IGitTracker interface {
+	// retrieves last commit from repo defined by `repoURL`. 
+	// len(repoPath) > 0 -> the repo must be cloned already to `repoPath`. 
+	// !ok -> no commits or no notifications about commits
+	GetLastCommit(repoURL string, repoPath string) (lastCommit string, ok bool)
+}

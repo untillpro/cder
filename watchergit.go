@@ -10,18 +10,18 @@ package main
 import (
 	"os"
 	"path"
-	"strings"
 
 	gc "github.com/untillpro/gochips"
 )
 
 type watcherGit struct {
+	commitsTracker   IGitTracker
 	lastCommitHashes map[string]string
 	// Used in the beginning of iteration to execute `git reset --hard`
 	reposMustBeCleaned bool
 }
 
-func (w *watcherGit) Watch(repos []string) (changedRepos []string) {
+func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
 	defer func() {
 		if r := recover(); r != nil {
 			gc.Error("watcherGit: Recovered: ", r)
@@ -31,17 +31,17 @@ func (w *watcherGit) Watch(repos []string) (changedRepos []string) {
 	// *************************************************
 	reposFolder := getReposFolder()
 
-	for _, repo := range repos {
-		repoPath, repoFolder := getAbsRepoFolders(repo)
-	
+	for _, repoURL := range repoURLs {
+		repoPath, repoFolder := getAbsRepoFolders(repoURL)
+
 		gc.Verbose("watcherGit", "repoPath, repoFolder=", repoPath, repoFolder)
-	
+
 		gc.ExitIfError(os.MkdirAll(reposFolder, 0755))
-	
+
 		if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-			gc.Info("watcherGit", "Repo folder does not exist, will be cloned", repoPath, repo)
+			gc.Info("watcherGit", "Repo folder does not exist, will be cloned", repoPath, repoURL)
 			err := new(gc.PipedExec).
-				Command("git", "clone", "--recurse-submodules", repo).
+				Command("git", "clone", "--recurse-submodules", repoURL).
 				WorkingDir(reposFolder).
 				Run(os.Stdout, os.Stderr)
 			gc.PanicIfError(err)
@@ -54,48 +54,31 @@ func (w *watcherGit) Watch(repos []string) (changedRepos []string) {
 					Run(os.Stdout, os.Stderr)
 				gc.PanicIfError(err)
 			}
-	
-			gc.Verbose("watcherGit", "Repo dir exists, will be pulled", repoPath, repo)
-			stdouts, stderrs, err := new(gc.PipedExec).
-				Command("git", "pull", repo).
-				WorkingDir(repoPath).
-				RunToStrings()
-			if nil != err {
-				gc.Info(stdouts, stderrs)
-			}
-			gc.PanicIfError(err)
 		}
-	
-		newHash := getLastCommitHash(repoPath)
-		oldHash := w.lastCommitHashes[repoPath]
-		if oldHash == newHash {
+
+		newHash, ok := w.commitsTracker.GetLastCommit(repoURL, repoPath)
+		if ok {
+			oldHash := w.lastCommitHashes[repoPath]
+			if oldHash == newHash {
+				continue
+			}
+			gc.Info("watcherGit", "Commit hash changed", repoURL, oldHash, newHash)
+		} else if _, ok := w.lastCommitHashes[repoPath]; ok {
+			// built once already -> skip
 			continue
 		}
 		w.reposMustBeCleaned = true
-		gc.Info("watcherGit", "Commit hash changed", repo, oldHash, newHash)
-		if len(oldHash) > 0 {
-			gitModulesPath := path.Join(repoPath, ".gitmodules")
-			if _, err := os.Stat(gitModulesPath); err == nil {
-				gc.Doing("watcherGit: updating modules")
-				err = new(gc.PipedExec).
+		gitModulesPath := path.Join(repoPath, ".gitmodules")
+		if _, err := os.Stat(gitModulesPath); err == nil {
+			gc.Doing("watcherGit: updating modules")
+			err = new(gc.PipedExec).
 				Command("git", "submodule", "update").
 				WorkingDir(repoPath).
 				Run(os.Stdout, os.Stderr)
-			}
 		}
 		w.lastCommitHashes[repoPath] = newHash
 		changedRepos = append(changedRepos, repoPath)
 	}
 
-	return 
-}
-
-func getLastCommitHash(repoDir string) string {
-	stdout, _, err := new(gc.PipedExec).
-		Command("git", "log", "-n", "1", `--pretty=format:%H`).
-		WorkingDir(repoDir).
-		RunToStrings()
-	gc.PanicIfError(err)
-
-	return strings.TrimSpace(stdout)
+	return
 }

@@ -1,0 +1,131 @@
+/*
+ * Copyright (c) 2020-present unTill Pro, Ltd. and Contributors
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"io/ioutil"
+	"net/url"
+	"os"
+	"path"
+	"testing"
+	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/gotify/go-api-client/v2/auth"
+	"github.com/gotify/go-api-client/v2/client/application"
+	"github.com/gotify/go-api-client/v2/client/message"
+	"github.com/gotify/go-api-client/v2/models"
+	"github.com/stretchr/testify/require"
+)
+
+func TestBasic(t *testing.T) {
+	setUp()
+	defer tearDown()
+
+	tempDir, err := ioutil.TempDir(os.TempDir(), "cderGotify_test")
+	require.Nil(t, err)
+	// curl "https://gotify.untill.changeip.com/message?token=A_bCTraAFNHgYS." -F "title=<version>" -F "message=<url>"
+	cmdRoot.SetArgs([]string{"cdGotify",
+		"--repo", "https://github.com/untillpro/airs-bp",
+		"--verbose", "--working-dir", tempDir, "--output", "airs-bp.exe", "--token", "CKYoTswZeGo.t1B",
+		"--url", "https://gotify.untill.changeip.com/"})
+	ctx, cancel = context.WithCancel(context.Background())
+	// cancel()
+	require.Nil(t, execute())
+}
+
+func TestWait(t *testing.T) {
+	gToken = "CKYoTswZeGo.t1B"
+	repoURL := "https://github.com/untillpro/airs-bp"
+	gURL = "https://gotify.untill.changeip.com/"
+	gotifyClient := getGotifyClient(gURL)
+	authInfo := auth.TokenAuth(gToken)
+
+	appsResponse, err := gotifyClient.Application.GetApps(nil, authInfo)
+	require.Nil(t, err)
+	app := findApp(appsResponse.Payload, repoURL)
+
+	if app == nil {
+		// create application
+		createAppParams := application.NewCreateAppParams().WithBody(&models.Application{
+			Name:        repoURL,
+			Description: "Created by cder-notify " + time.Now().Format(time.RFC3339),
+		})
+		createAppResponse, err := gotifyClient.Application.CreateApp(createAppParams, authInfo)
+		require.Nil(t, err)
+		app = createAppResponse.Payload
+		printPushVerCommand(app)
+	}
+
+	// get last version
+	appMessagesParams := message.NewGetAppMessagesParams()
+	appMessagesParams.ID = int64(app.ID)
+	limit := int64(1)
+	appMessagesParams.Limit = &limit
+	appMessagesResponse, err := gotifyClient.Message.GetAppMessages(appMessagesParams, authInfo)
+	require.Nil(t, err)
+	lastVer := ""
+	if len(appMessagesResponse.Payload.Messages) != 0 {
+		lastVer = appMessagesResponse.Payload.Messages[0].Title
+	}
+
+	lastVer, err = waitNewVersion(app.ID)
+	require.Nil(t, err)
+	require.NotNil(t, lastVer)
+	lastVer, err = waitNewVersion(app.ID)
+	require.Nil(t, err)
+	require.NotNil(t, lastVer)
+}
+
+func waitNewVersion(appID uint) (string, error) {
+	// change url "http(s)://server.url" -> "ws(s)://server.url/stream?token=<token>"
+	parsedURL, err := url.Parse("https://gotify.untill.changeip.com/")
+	if err != nil {
+		return "", err
+	}
+	if parsedURL.Scheme == "http" {
+		parsedURL.Scheme = "ws"
+	} else {
+		parsedURL.Scheme = "wss"
+	}
+	parsedURL.Path = path.Join(parsedURL.Path, "stream")
+	{
+		pq, err := url.ParseQuery(parsedURL.RawQuery)
+		if err != nil {
+			return "", err
+		}
+		pq.Add("token", gToken)
+		parsedURL.RawQuery = pq.Encode()
+	}
+	wsURL := parsedURL.String()
+
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	for {
+		_, payload, err := conn.ReadMessage()
+		if err != nil {
+			return "", err
+		}
+		messageExternal := &models.MessageExternal{}
+		err = json.NewDecoder(bytes.NewBuffer(payload)).Decode(messageExternal)
+		if err != nil {
+			return "", err
+		}
+		if messageExternal.ApplicationID != appID {
+			continue
+		}
+		return messageExternal.Title, nil
+	}
+}
