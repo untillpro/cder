@@ -114,9 +114,13 @@ func (d *deployer4go) stopCmd() {
 }
 
 func (d *deployer4go) replaceGoMod() {
+	goModPath := path.Join(d.wd, "go.mod")
+	if !fileExists(goModPath) {
+		gc.Verbose("deployer4go.replaceGoMod: go.mod does not exist, skipping")
+		return
+	}
 	gc.Doing("deployer4go.replaceGoMod: Replacing go.mod")
 
-	goModPath := path.Join(d.wd, "go.mod")
 	goModPathContentBytes, err := ioutil.ReadFile(goModPath)
 	gc.PanicIfError(err)
 	goModPathContent := string(goModPathContentBytes)
@@ -133,4 +137,9 @@ func (d *deployer4go) replaceGoMod() {
 	}
 
 	gc.PanicIfError(ioutil.WriteFile(goModPath, []byte(goModPathContent), 0644))
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

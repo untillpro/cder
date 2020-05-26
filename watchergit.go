@@ -72,7 +72,7 @@ func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
 		if _, err := os.Stat(gitModulesPath); err == nil {
 			gc.Doing("watcherGit: updating modules")
 			err = new(gc.PipedExec).
-				Command("git", "submodule", "update").
+				Command("git", "submodule", "update", "--init", "--recursive").
 				WorkingDir(repoPath).
 				Run(os.Stdout, os.Stderr)
 		}

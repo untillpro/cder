@@ -27,6 +27,7 @@ import (
 )
 
 func TestBasic(t *testing.T) {
+	t.Skip()
 	setUp()
 	defer tearDown()
 
