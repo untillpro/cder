@@ -47,9 +47,16 @@ func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
 			gc.PanicIfError(err)
 		} else {
 			if w.reposMustBeCleaned {
-				gc.Info("watcherGit", "Cleaning "+repoPath)
+				gc.Info("watcherGit", "Resetting "+repoPath)
 				err = new(gc.PipedExec).
 					Command("git", "reset", "--hard").
+					WorkingDir(repoPath).
+					Run(os.Stdout, os.Stderr)
+				gc.PanicIfError(err)
+				// possible: module of wrong version is built within submodule. So it does not rebuilt on further push. Need to clean additionaly. Ask Yohanson555
+				gc.Info("watcherGit", "Cleaning "+repoPath)
+				err = new(gc.PipedExec).
+					Command("git", "clean", "-dxf").
 					WorkingDir(repoPath).
 					Run(os.Stdout, os.Stderr)
 				gc.PanicIfError(err)
