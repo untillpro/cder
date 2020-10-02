@@ -121,6 +121,7 @@ func iteration() {
 			deployer.Deploy(changedRepo)
 		}
 		deployer.DeployAll(changedRepos)
+		watcher.Clean(changedRepos)
 	} else {
 		gc.Verbose("*** Nothing changed")
 	}

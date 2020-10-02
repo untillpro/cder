@@ -17,11 +17,27 @@ import (
 type watcherGit struct {
 	commitsTracker   IGitTracker
 	lastCommitHashes map[string]string
-	// Used in the beginning of iteration to execute `git reset --hard`
-	reposMustBeCleaned bool
 }
 
-func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
+func (w *watcherGit) Clean(repoPathsToClean []string) {
+	for _, repoPath := range repoPathsToClean {
+		gc.Info("watcherGit", "Resetting "+repoPath)
+		err := new(gc.PipedExec).
+			Command("git", "reset", "--hard").
+			WorkingDir(repoPath).
+			Run(os.Stdout, os.Stderr)
+		gc.PanicIfError(err)
+		// possible: module of wrong version is built within submodule. So it does not rebuilt on further push. Need to clean additionaly. Ask Yohanson555
+		gc.Info("watcherGit", "Cleaning "+repoPath)
+		err = new(gc.PipedExec).
+			Command("git", "clean", "-dxf").
+			WorkingDir(repoPath).
+			Run(os.Stdout, os.Stderr)
+		gc.PanicIfError(err)
+	}
+}
+
+func (w *watcherGit) Watch(repoURLs []string) (changedRepoPaths []string) {
 	defer func() {
 		if r := recover(); r != nil {
 			gc.Error("watcherGit: Recovered: ", r)
@@ -45,22 +61,6 @@ func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
 				WorkingDir(reposFolder).
 				Run(os.Stdout, os.Stderr)
 			gc.PanicIfError(err)
-		} else {
-			if w.reposMustBeCleaned {
-				gc.Info("watcherGit", "Resetting "+repoPath)
-				err = new(gc.PipedExec).
-					Command("git", "reset", "--hard").
-					WorkingDir(repoPath).
-					Run(os.Stdout, os.Stderr)
-				gc.PanicIfError(err)
-				// possible: module of wrong version is built within submodule. So it does not rebuilt on further push. Need to clean additionaly. Ask Yohanson555
-				gc.Info("watcherGit", "Cleaning "+repoPath)
-				err = new(gc.PipedExec).
-					Command("git", "clean", "-dxf").
-					WorkingDir(repoPath).
-					Run(os.Stdout, os.Stderr)
-				gc.PanicIfError(err)
-			}
 		}
 
 		newHash, ok := w.commitsTracker.GetLastCommit(repoURL, repoPath)
@@ -74,7 +74,6 @@ func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
 			// built once already -> skip
 			continue
 		}
-		w.reposMustBeCleaned = true
 		gitModulesPath := path.Join(repoPath, ".gitmodules")
 		if _, err := os.Stat(gitModulesPath); err == nil {
 			gc.Doing("watcherGit: updating modules")
@@ -84,7 +83,7 @@ func (w *watcherGit) Watch(repoURLs []string) (changedRepos []string) {
 				Run(os.Stdout, os.Stderr)
 		}
 		w.lastCommitHashes[repoPath] = newHash
-		changedRepos = append(changedRepos, repoPath)
+		changedRepoPaths = append(changedRepoPaths, repoPath)
 	}
 
 	return
