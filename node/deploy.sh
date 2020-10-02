@@ -10,15 +10,16 @@ case $1 in
                 echo "deployer.deploy"
                 cd $2
                 if [[ -f ./package.json ]]; then
-                  needCI=$(git diff --stat master@{1} master package-lock.json || echo "err")
-                  if [[ $needCI == "" ]]; then
-                    echo "only build"
-                    npm run build
-                  else
+                  # git replies with "fatal: Log for 'master' only has 1 entries." in airc-shell
+                  #needCI=$(git diff --stat master@{1} master package-lock.json || echo "err")
+                  #if [[ $needCI == "" ]]; then
+                  #  echo "only build"
+                  #  npm run build
+                  #else
                     echo "ci and build"
                     npm ci
                     npm run build
-                  fi
+                  #fi
                   kill $(pidof nginx) || true
                   cp -r ./build /usr/share/nginx/html
                 else
