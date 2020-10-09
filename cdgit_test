@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -21,13 +22,14 @@ func TestCderGitBasic(t *testing.T) {
 	tempDir, err := ioutil.TempDir(os.TempDir(), "cder_test")
 	require.Nil(t, err)
 	cmdRoot.SetArgs([]string{"cd",
-		"--repo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-bp",
-		"--extraRepo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-icore",
-		"--extraRepo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-icoreimpl=https://github.com/host6/airs-icoreimpl",
+		"--init=git config --global url.https://builder-untill:f3267844bf54993a9b1f7b92b94c8237204dd474@github.com/untillpro.insteadOf https://github.com/untillpro;git config --global url.https://host6:4f205c76aa2b575d8a3e41a1d346b4045b5b656f@github.com/host6.insteadOf https://github.com/host6",
+		"--repo", "https://github.com/host6/airs-bp2",
+		"--extraRepo=https://github.com/untillpro/airs-icoreimpl=https://github.com/host6/airs-icoreimpl",
 		"--verbose", "--working-dir", tempDir, "--output", "airs-bp.exe"})
 	ctx, cancel = context.WithCancel(context.Background())
-	cancel()
+	//cancel()
 	require.Nil(t, execute())
+	time.Sleep(100000000000)
 }
 
 func TestCderGitSubmodules(t *testing.T) {
