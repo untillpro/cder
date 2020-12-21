@@ -12,6 +12,7 @@ Main idea is to update container instances directly from git repos or artifacts
 
 # Usage
 - `cd` command
+  - Watches over git repositories and rebuilds if changed
   - Each `--timeout` seconds
     - `--repo` pulled to `<--working-dir>/repos/lastURI(<--repo>)` folder. The last commit differs from the stored one -> `deployAll` is executed
       - `--extraRepo` if processed
@@ -33,6 +34,7 @@ Main idea is to update container instances directly from git repos or artifacts
     - nothing is made for golang repos
   - `deploy.sh` used instead golang delpyer if exists at `--working-dir` 
 - `cdurl` command
+  - watches over specified url and executes deploy scripts if changed
   - content from `--url` is downloaded each `--timeout` seconds
     - should consist of 2 lines separated by `\n`
   - 1st line changed i.e. new artifact version is released
@@ -42,6 +44,15 @@ Main idea is to update container instances directly from git repos or artifacts
     - assume 2nd line is changed
   - 2nd line changed
     - content from 2nd line url is downloaded and saved as `<--working-dir>/artifacts/<--url>/work-dir/deploy.sh` and executed  
+- `cdGotify` command
+  - watches over Git repositories using Gotify server and rebuilds if changed
+    - push -> `curl "https://gotify.untill.changeip.com/message?token=<appToken>" -F "title=<lastCommitHash>"`
+    - each message from Gotify server is considered as the last commit hash
+    - Gotify server is pulled each `--timeout` seconds
+    - Could not use websocket poll because Gotify replies on poll if push is made after poll start only. Pushes made right before the poll will be lost.
+  - Each repo is cloned once on start. Further is the same as for `cd` command
+  - `--gToken` - Gotify token to access to the server
+  - `--gURL` - Gotify server URL
 - `-v` means verbose mode
 - `--option1 arg1 arg2` are passed to `out.exe`
 

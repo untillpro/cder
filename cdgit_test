@@ -14,17 +14,31 @@ import (
 )
 
 func TestCderGitBasic(t *testing.T) {
+	t.Skip()
 	setUp()
 	defer tearDown()
 
 	tempDir, err := ioutil.TempDir(os.TempDir(), "cder_test")
 	require.Nil(t, err)
-	cmdRoot.SetArgs([]string{"cd", 
-		"--repo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-bp", 
+	cmdRoot.SetArgs([]string{"cd",
+		"--repo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-bp",
 		"--extraRepo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-icore",
 		"--extraRepo", "https://builder-untill:y79tYtnBKqTbfUjR@github.com/untillpro/airs-icoreimpl=https://github.com/host6/airs-icoreimpl",
 		"--verbose", "--working-dir", tempDir, "--output", "airs-bp.exe"})
 	ctx, cancel = context.WithCancel(context.Background())
 	cancel()
+	require.Nil(t, execute())
+}
+
+func TestCderGitSubmodules(t *testing.T) {
+	setUp()
+	defer tearDown()
+
+	tempDir, err := ioutil.TempDir(os.TempDir(), "cder_test")
+	require.Nil(t, err)
+	cmdRoot.SetArgs([]string{"cd",
+		"--repo", "https://github.com/host6/test-sub",
+		"--verbose", "--working-dir", tempDir, "--output", "test-sub.exe"})
+	ctx, cancel = context.WithCancel(context.Background())
 	require.Nil(t, execute())
 }

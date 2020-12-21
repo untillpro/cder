@@ -23,7 +23,7 @@ import (
 var (
 	ctx    context.Context
 	cancel context.CancelFunc
-	repos  []string
+	repoURLs  []string
 	// used in tests
 	afterIteration func()              = func() {}
 	onError        func(r interface{}) = func(r interface{}) {}
@@ -73,7 +73,7 @@ func seed(ctx context.Context, wg *sync.WaitGroup) {
 	// *************************************************
 	gc.Info("timeout", timeoutDur)
 	gc.Info("replacements", replacements)
-	gc.Info("repos", repos)
+	gc.Info("repos", repoURLs)
 
 	if len(workingDir) > 0 {
 		gc.Info("Creating working dir...")
@@ -81,13 +81,16 @@ func seed(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	// *************************************************
-	for _, initCmd := range initCmds {
-		gc.Info("Executing init command:", initCmd)
-		initArgs := strings.Split(initCmd, " ")
-		gc.ExitIfError(new(gc.PipedExec).
-			Command(initArgs[0], initArgs[1:]...).
-			WorkingDir(workingDir).
-			Run(os.Stdout, os.Stderr))
+	for _, initCmdCombined := range initCmds {
+		initCmdSplitted := strings.Split(initCmdCombined, ";")
+		for _, initCmd := range initCmdSplitted {
+			gc.Info("Executing init command:", initCmd)
+			initArgs := strings.Split(initCmd, " ")
+			gc.ExitIfError(new(gc.PipedExec).
+				Command(initArgs[0], initArgs[1:]...).
+				WorkingDir(workingDir).
+				Run(os.Stdout, os.Stderr))
+		}
 	}
 
 	for {
@@ -112,12 +115,13 @@ func iteration() {
 	}()
 
 	gc.Verbose("iteration", "Checking if repos changed")
-	changedRepos := watcher.Watch(repos)
+	changedRepos := watcher.Watch(repoURLs)
 	if len(changedRepos) > 0 {
 		for _, changedRepo := range changedRepos {
 			deployer.Deploy(changedRepo)
 		}
 		deployer.DeployAll(changedRepos)
+		watcher.Clean(changedRepos)
 	} else {
 		gc.Verbose("*** Nothing changed")
 	}

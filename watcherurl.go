@@ -26,6 +26,10 @@ type watcherURL struct {
 	deployerURLStored string
 }
 
+func (w *watcherURL) Clean(repoPathsToClean []string) {
+	// clean is not necessary because artifactWD removes each time before unzipping new artifact
+}
+
 func (w *watcherURL) Watch(repos []string) (changedRepos []string) {
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
