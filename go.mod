@@ -1,6 +1,6 @@
 module github.com/untillpro/cder
 
-go 1.15
+go 1.16
 
 require (
 	github.com/gotify/go-api-client/v2 v2.0.4
