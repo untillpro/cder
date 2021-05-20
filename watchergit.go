@@ -81,6 +81,7 @@ func (w *watcherGit) Watch(repoURLs []string) (changedRepoPaths []string) {
 				Command("git", "submodule", "update", "--init", "--recursive").
 				WorkingDir(repoPath).
 				Run(os.Stdout, os.Stderr)
+			gc.PanicIfError(err)
 		}
 		w.lastCommitHashes[repoPath] = newHash
 		changedRepoPaths = append(changedRepoPaths, repoPath)

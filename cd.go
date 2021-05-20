@@ -117,11 +117,12 @@ func iteration() {
 	gc.Verbose("iteration", "Checking if repos changed")
 	changedRepos := watcher.Watch(repoURLs)
 	if len(changedRepos) > 0 {
+		watcher.Clean(changedRepos) // clean before build
 		for _, changedRepo := range changedRepos {
 			deployer.Deploy(changedRepo)
 		}
 		deployer.DeployAll(changedRepos)
-		watcher.Clean(changedRepos)
+		watcher.Clean(changedRepos) // clean after build. May be not reached in case of panic on Deploy*()
 	} else {
 		gc.Verbose("*** Nothing changed")
 	}
