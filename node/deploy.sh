@@ -18,7 +18,7 @@ case $1 in
                   #else
                     echo "ci and build"
                     npm ci
-                    npm run build
+                    npm run build --max-old-space-size=1024
                   #fi
                   kill $(pidof nginx) || true
                   cp -r ./build /usr/share/nginx/html
