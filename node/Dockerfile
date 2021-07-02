@@ -1,4 +1,4 @@
-FROM node:10.16.1
+FROM node:14.7.0
 
 USER root
 RUN mkdir /cder
