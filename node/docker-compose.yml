@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   shell:
-    image: ${DOCKER_LOGIN}/cdernode:v1.16
+    image: ${DOCKER_LOGIN}/cdernode:v1.18
     networks:
       - webgateway
     command:
