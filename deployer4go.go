@@ -19,7 +19,10 @@ import (
 	gc "github.com/untillpro/gochips"
 )
 
-var binaryName string
+var (
+	binaryName string
+	buildPath  string
+)
 
 type deployer4go struct {
 	cmd  *exec.Cmd
@@ -39,8 +42,12 @@ func (d *deployer4go) DeployAll(repos []string) {
 	d.replaceGoMod()
 	gc.Info("itdeployer4go.DeployAll:", "Main repo will be rebuilt")
 	gc.Doing("go build")
+	params := []string {"build", "-o", binaryName}
+	if len(buildPath) > 0 {
+		params = append(params, buildPath)
+	}
 	err := new(gc.PipedExec).
-		Command("go", "build", "-o", binaryName).
+		Command("go", params...).
 		WorkingDir(d.wd).
 		Run(gc.VerboseWriters())
 	gc.PanicIfError(err)

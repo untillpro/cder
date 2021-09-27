@@ -69,13 +69,15 @@ func execute() error {
 	cmdCDGit.Flags().StringSliceVar(&extraRepos, "extraRepo", []string{}, "Dependencies of main repository to track for changes")
 	cmdCDGit.Flags().StringVarP(&mainRepo, "repo", "r", "", "Main repository")
 	cmdCDGit.Flags().StringVarP(&binaryName, "output", "o", "", "Output binary name")
+	cmdCDGit.Flags().StringVarP(&buildPath, "build", "b", "", "Path to build at")
 	cmdCDGit.MarkFlagRequired("output")
 	cmdCDGit.MarkFlagRequired("repo")
-	
+
 
 	cmdCDGotify.Flags().StringSliceVar(&extraRepos, "extraRepo", []string{}, "Dependencies of main repository to track for changes")
 	cmdCDGotify.Flags().StringVarP(&mainRepo, "repo", "r", "", "Main repository")
 	cmdCDGotify.Flags().StringVarP(&binaryName, "output", "o", "", "Output binary name")
+	cmdCDGotify.Flags().StringVarP(&buildPath, "build", "b", "", "Path to build at")
 	cmdCDGotify.Flags().StringVarP(&gToken, "token", "", "", "Gotify token")
 	cmdCDGotify.Flags().StringVarP(&gURL, "url", "u", "", "Gotify server url")
 	cmdCDGotify.MarkFlagRequired("output")
